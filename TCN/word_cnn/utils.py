@@ -81,8 +81,10 @@ def batchify(data, batch_size, args):
     return data
 
 
-def get_batch(source, i, args, seq_len=None, evaluation=False):
+def get_batch(source, i, args, seq_len=192, evaluation=False):
     seq_len = min(seq_len if seq_len else args.seq_len, source.size(1) - 1 - i)
-    data = Variable(source[:, i:i+seq_len], volatile=evaluation)
-    target = Variable(source[:, i+1:i+1+seq_len])     # CAUTION: This is un-flattened!
+    data = Variable(source[:, i:i+seq_len+1], volatile=evaluation)
+    data = torch.cat((data[:,-1].view(args.batch_size,1),data),1)
+    data = torch.cat((data[:, :144],torch.ones([args.batch_size, 48], dtype=torch.long).cuda()),1)
+    target = Variable(source[:, i:i+seq_len])     # CAUTION: This is un-flattened!
     return data, target
